@@ -6,6 +6,7 @@ Assume that the string can only contain zero or more chars in the range a-z.
 */
 
 import { lexismallestStringWithinCost as ImplA } from '../src/lexismallestStringWithinCost.js';
+import { lexismallestStringWithinCost as ImplB } from '../src/lexismallestStringWithinCost-stub.js';
 
 const testCases = [
   {
@@ -90,4 +91,5 @@ function runTests(impl, name) {
   });
 }
 
-runTests(ImplA, 'Implementation A');
+runTests(ImplA, '(golden) Implementation A');
+runTests(ImplB, '("stub") Implementation B');

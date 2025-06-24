@@ -1,4 +1,4 @@
-export function smallestStringWithCost(s, costs, k) {
+export function lexismallestStringWithinCost(s, costs, k) {
     /**
      * Remove characters to get lexicographically smallest string within cost budget.
      * Uses brute force approach to handle negative costs correctly.

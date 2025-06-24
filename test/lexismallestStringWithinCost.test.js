@@ -1,4 +1,4 @@
-import { smallestStringWithCost as ImplA } from '../src/lexi-smallest-sub.js';
+import { lexismallestStringWithinCost as ImplA } from '../src/lexismallestStringWithinCost.js';
 
 const testCases = [
   {

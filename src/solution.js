@@ -9,14 +9,27 @@ Write a function that computes the minimum total cost to travel from a given sta
 If no path exists between start and end, return null.
  */
 
-
 /**
- * @param {number} N - Number of nodes
- * @param {[number, number, number][]} edges - List of directed edges as [from, to, weight]
- * @param {number} start - Starting node index
- * @param {number} end - Destination node index
- * @returns {number | null} - Minimum cost from start to end, or null if no path exists
+ * @param {number} N - number of nodes
+ * @param {[number, number, number][]} edges - list of [from, to, weight]
+ * @param {number} start - starting node
+ * @param {number} end - destination node
+ * @returns {number|null} - minimum cost or null if unreachable
  */
-function minCostPath(N, edges, start, end) {
-  // your code here
+export function minCostPath(N, edges, start, end) {
+  const dist = new Array(N).fill(Infinity);
+  dist[start] = 0;
+
+  // Relax edges N - 1 times
+  for (let i = 0; i < N - 1; i++) {
+    let changed = false;
+    for (const [u, v, w] of edges) {
+      if (dist[u] !== Infinity && dist[u] + w < dist[v]) {
+        dist[v] = dist[u] + w;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  return dist[end] === Infinity ? null : dist[end];
 }

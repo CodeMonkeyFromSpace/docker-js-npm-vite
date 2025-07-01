@@ -1,66 +1,4 @@
 /**
- * A Min Heap implementation for storing task objects,
- * comparing them based on their penalty.
- */
-class MinHeap {
-  constructor() {
-    // The heap is stored in an array. Index 0 is unused for easier math.
-    this.heap = [null];
-  }
-
-  // Inserts a new task into the heap
-  insert(task) {
-    this.heap.push(task);
-    if (this.heap.length > 2) {
-      let idx = this.heap.length - 1;
-      // Bubble up: while the new node's penalty is smaller than its parent's
-      while (idx > 1 && this.heap[Math.floor(idx / 2)].penalty > this.heap[idx].penalty) {
-        // Swap with parent
-        [this.heap[Math.floor(idx / 2)], this.heap[idx]] = [this.heap[idx], this.heap[Math.floor(idx / 2)]];
-        idx = Math.floor(idx / 2);
-      }
-    }
-  }
-
-  // Removes and returns the task with the minimum penalty
-  extractMin() {
-    if (this.heap.length <= 1) return null;
-
-    const min = this.heap[1]; // The root is the minimum
-    
-    // Move the last element to the root to start the heapify process
-    if (this.heap.length > 2) {
-      this.heap[1] = this.heap.pop();
-      let idx = 1;
-      // Bubble down: swap with the smaller child until the heap property is restored
-      while (this.heap[idx * 2]) { // while a left child exists
-        let leftChildIdx = idx * 2;
-        let rightChildIdx = idx * 2 + 1;
-        let smallerChildIdx = leftChildIdx;
-
-        // If a right child exists and its penalty is smaller, it's the one to compare
-        if (this.heap[rightChildIdx] && this.heap[rightChildIdx].penalty < this.heap[leftChildIdx].penalty) {
-          smallerChildIdx = rightChildIdx;
-        }
-
-        // If the current node's penalty is greater than its smaller child's, swap them
-        if (this.heap[idx].penalty > this.heap[smallerChildIdx].penalty) {
-          [this.heap[idx], this.heap[smallerChildIdx]] = [this.heap[smallerChildIdx], this.heap[idx]];
-          idx = smallerChildIdx;
-        } else {
-          // The node is in the correct place
-          break;
-        }
-      }
-    } else {
-      // Only one element was in the heap
-      this.heap.pop();
-    }
-    return min;
-  }
-}
-
-/**
  * @typedef {object} Task
  * @property {number} deadline - The day by which the task must be finished.
  * @property {number} duration - The number of days the task takes to complete.
@@ -68,7 +6,8 @@ class MinHeap {
  */
 
 /**
- * Determines the minimum total penalty incurred by optimally scheduling tasks.
+ * Determines the minimum total penalty incurred by optimally scheduling tasks
+ * using a Dynamic Programming approach.
  *
  * @param {Task[]} tasks - An array of task objects.
  * @returns {number} The minimum total penalty.
@@ -81,42 +20,44 @@ export function minTotalPenalty(tasks) {
   // 1. Sort tasks by their deadline in ascending order.
   const sortedTasks = [...tasks].sort((a, b) => a.deadline - b.deadline);
 
-  let currentTime = 0;
-  // The heap stores tasks we have CHOSEN to do, ordered by their penalty (min first).
-  const chosenTasksHeap = new MinHeap();
-  
-  // 2. Iterate through the sorted tasks
+  // 2. Find the maximum possible deadline to determine the size of our DP table.
+  let maxDeadline = 0;
   for (const task of sortedTasks) {
-    // 3. Tentatively add the current task to our schedule.
-    chosenTasksHeap.insert(task);
-    currentTime += task.duration;
-
-    // 4. Check for a conflict: if the total time exceeds the current task's deadline.
-    if (currentTime > task.deadline) {
-      // We must reject a task. To minimize penalty, we reject the one with the
-      // lowest penalty from our currently chosen set.
-      const taskToReject = chosenTasksHeap.extractMin();
-      
-      // Update the schedule's time by removing the rejected task's duration.
-      currentTime -= taskToReject.duration;
+    if (task.deadline > maxDeadline) {
+      maxDeadline = task.deadline;
     }
   }
 
-  // 5. Calculate the final penalty.
-  // The tasks remaining in the heap are the ones we completed on time.
-  // The total penalty is the sum of ALL initial penalties minus the sum of penalties
-  // for the tasks we successfully completed.
-  
-  let totalPossiblePenalty = 0;
-  for (const task of tasks) {
-    totalPossiblePenalty += task.penalty;
+  // 3. Initialize the DP table.
+  // dp[t] will store the maximum penalty that can be AVOIDED by time t.
+  const dp = new Array(maxDeadline + 1).fill(0);
+
+  // 4. Iterate through each task to build up the DP table.
+  for (const task of sortedTasks) {
+    // 5. For each task, update the DP table for all possible completion times.
+    // We iterate backwards to ensure we use the result from the *previous* state (0/1 knapsack style).
+    for (let t = task.deadline; t >= task.duration; t--) {
+      // At time t, we can either:
+      // a) Not do the current task (value is the existing dp[t])
+      // b) Do the current task. The value would be its penalty plus the max value
+      //    we could get from previous tasks in the remaining time (t - task.duration).
+      const valueIfIncluded = dp[t - task.duration] + task.penalty;
+      dp[t] = Math.max(dp[t], valueIfIncluded);
+    }
+    
+    // After processing a task, we need to propagate the results. If we can achieve
+    // a certain value by time t-1, we can also achieve it by time t.
+    // This handles cases where a time slot might be empty.
+    // Note: This propagation can be done at the end for efficiency, but doing it
+    // here makes the dp state consistent after each task.
+    for (let t = 1; t <= maxDeadline; t++) {
+        dp[t] = Math.max(dp[t], dp[t-1]);
+    }
   }
 
-  let savedPenalty = 0;
-  // The heap array is [null, task1, task2, ...], so we start loop at 1.
-  for (let i = 1; i < chosenTasksHeap.heap.length; i++) {
-    savedPenalty += chosenTasksHeap.heap[i].penalty;
-  }
+  // 6. Calculate the final result.
+  const totalPossiblePenalty = tasks.reduce((sum, task) => sum + task.penalty, 0);
+  const maxSavedPenalty = dp[maxDeadline];
 
-  return totalPossiblePenalty - savedPenalty;
+  return totalPossiblePenalty - maxSavedPenalty;
 }

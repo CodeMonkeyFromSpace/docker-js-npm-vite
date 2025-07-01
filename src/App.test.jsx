@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
+import { describe, expect } from 'vitest';
 
 describe('App Component', () => {
   it('renders the heading "Vite + React"', () => {
@@ -18,4 +19,4 @@ describe('App Component', () => {
     // Verify that the button now shows "count is 1"
     expect(button).toHaveTextContent('count is 1')
   })
-})
+});

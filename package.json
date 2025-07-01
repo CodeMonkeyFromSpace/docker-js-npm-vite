@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "docker:build": "docker build -t digital-root-test .",
+    "docker:test": "docker run -it digital-root-test ./run_tests.sh"
   },
   "dependencies": {
     "react": "^19.0.0",
